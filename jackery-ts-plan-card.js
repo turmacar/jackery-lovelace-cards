@@ -199,9 +199,10 @@ class JackeryPlanCard extends HTMLElement {
 
   _renderDayChips(item, itemIdx) {
     const mask = item.day_mask || "0000000";
-    const clickable = this._locked && !item._divider;
+    const clickable = !this._locked && !item._divider;
+    const lockedClass = this._locked ? ' locked' : '';
     return DAY_LABELS.map((label, i) =>
-      `<span class="day-chip ${mask[i] === "1" ? "active" : ""}${clickable ? " clickable" : ""}" ${clickable ? `data-day-toggle="${itemIdx}-${i}"` : ""}>${label}</span>`
+      `<span class="day-chip ${mask[i] === "1" ? "active" : ""}${clickable ? " clickable" : ""}${lockedClass}" ${clickable ? `data-day-toggle="${itemIdx}-${i}"` : ""}>${label}</span>`
     ).join("");
   }
 
@@ -343,30 +344,6 @@ class JackeryPlanCard extends HTMLElement {
         .plan-actions button:hover {
           background: var(--divider-color, #e0e0e0);
         }
-        .toggle {
-          width: 40px;
-          height: 22px;
-          border-radius: 11px;
-          border: none;
-          cursor: pointer;
-          position: relative;
-          transition: background 0.2s;
-          padding: 0;
-        }
-        .toggle.on { background: var(--primary-color, #03a9f4); }
-        .toggle.off { background: var(--disabled-text-color, #bdbdbd); }
-        .toggle::after {
-          content: "";
-          position: absolute;
-          top: 2px;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: white;
-          transition: left 0.2s;
-        }
-        .toggle.on::after { left: 20px; }
-        .toggle.off::after { left: 2px; }
         .timebar {
           height: 6px;
           background: var(--divider-color, #e0e0e0);
@@ -406,6 +383,14 @@ class JackeryPlanCard extends HTMLElement {
         }
         .day-chip.clickable:hover {
           opacity: 0.75;
+        }
+        .day-chip.locked {
+          opacity: 0.7;
+          filter: grayscale(30%);
+        }
+        ha-switch.locked {
+          opacity: 0.7;
+          filter: grayscale(30%);
         }
         .no-plans {
           text-align: center;
@@ -583,7 +568,7 @@ class JackeryPlanCard extends HTMLElement {
                   <div class="plan-time">${item.start} → ${item.end}</div>
                 </div>
                 <div class="plan-actions">
-                  <button class="toggle ${item.enabled ? "on" : "off"}" data-toggle="${i}"></button>
+                  <ha-switch class="${this._locked ? 'locked' : ''}" ${item.enabled ? 'checked' : ''} ${this._locked ? 'disabled' : ''} data-toggle="${i}"></ha-switch>
                   ${!this._locked ? `<button class="delete-btn" data-delete="${i}" title="Delete">🗑️</button>` : ''}
                 </div>
               </div>
@@ -609,9 +594,9 @@ class JackeryPlanCard extends HTMLElement {
       this._addDivider();
     });
 
-    this.shadowRoot.querySelectorAll("[data-toggle]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const idx = parseInt(btn.dataset.toggle);
+    this.shadowRoot.querySelectorAll("ha-switch[data-toggle]").forEach(sw => {
+      sw.addEventListener("change", () => {
+        const idx = parseInt(sw.dataset.toggle);
         const item = items[idx];
         if (item && !item._divider) this._togglePlan(item.pid, item.enabled);
       });

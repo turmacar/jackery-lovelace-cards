@@ -20,6 +20,13 @@ class JackeryCircuitPanelCard extends HTMLElement {
     if (this._hass && this._config) this._render();
   }
 
+  disconnectedCallback() {
+    if (this._retryTimer) {
+      clearInterval(this._retryTimer);
+      this._retryTimer = null;
+    }
+  }
+
   setConfig(config) {
     this._config = config;
     if (this._hass) this._render();
@@ -31,9 +38,22 @@ class JackeryCircuitPanelCard extends HTMLElement {
     if (!prev && hass) {
       this._loadLock();
       this._render();
+      this._startRetry();
     } else if (prev && (this._circuitsChanged(prev, hass) || !this._hasRenderedCircuits)) {
       this._render();
     }
+  }
+
+  _startRetry() {
+    if (this._retryTimer) return;
+    this._retryTimer = setInterval(() => {
+      if (this._hasRenderedCircuits) {
+        clearInterval(this._retryTimer);
+        this._retryTimer = null;
+        return;
+      }
+      this._render();
+    }, 2000);
   }
 
   async _loadLock() {
@@ -138,6 +158,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
     circuits.sort((a, b) => a.circuitIndex - b.circuitIndex);
 
     // Merge with cached data: use cached values for any circuit with unavailable state
+    // This prevents flickering of power values when the integration is temporarily unavailable
     if (this._cachedCircuits.length > 0) {
       const cacheMap = new Map(this._cachedCircuits.map(c => [c.circuitIndex, c]));
       for (const c of circuits) {
@@ -200,8 +221,8 @@ class JackeryCircuitPanelCard extends HTMLElement {
     const title = this._config.title || "Circuit Panel";
 
     // Split into two banks: odd (A) and even (B)
-    const bank1 = circuits.filter(c => c.circuitIndex % 2 === 1);
-    const bank2 = circuits.filter(c => c.circuitIndex % 2 === 0);
+    const bankA = circuits.filter(c => c.circuitIndex % 2 === 1);
+    const bankB = circuits.filter(c => c.circuitIndex % 2 === 0);
 
     // Build a map of combined circuits for partner slot rendering
     this._combinedMap = new Map();
@@ -332,35 +353,6 @@ class JackeryCircuitPanelCard extends HTMLElement {
           color: var(--secondary-text-color);
           font-variant-numeric: tabular-nums;
         }
-        .breaker-toggle {
-          width: 36px;
-          height: 20px;
-          border-radius: 10px;
-          border: none;
-          cursor: pointer;
-          position: relative;
-          transition: background 0.2s;
-          padding: 0;
-          flex-shrink: 0;
-        }
-        .breaker-toggle.on { background: var(--primary-color, #03a9f4); }
-        .breaker-toggle.off { background: var(--disabled-text-color, #bdbdbd); }
-        .breaker-toggle.unavailable {
-          background: var(--divider-color, #e0e0e0);
-          cursor: default;
-          opacity: 0.5;
-        }
-        .breaker-toggle.locked {
-          cursor: default;
-          opacity: 0.5;
-          filter: grayscale(50%);
-        }
-        .breaker-toggle.locked.on {
-          background: var(--primary-color, #03a9f4);
-        }
-        .breaker-toggle.locked.off {
-          background: var(--disabled-text-color, #bdbdbd);
-        }
         .lock-btn {
           background: none;
           border: none;
@@ -374,19 +366,6 @@ class JackeryCircuitPanelCard extends HTMLElement {
           --mdc-icon-size: 20px;
         }
         .lock-btn:hover { background: var(--divider-color, #e0e0e0); }
-        .breaker-toggle::after {
-          content: "";
-          position: absolute;
-          top: 2px;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: white;
-          transition: left 0.2s;
-        }
-        .breaker-toggle.on::after { left: 18px; }
-        .breaker-toggle.off::after { left: 2px; }
-        .breaker-toggle.unavailable::after { left: 2px; }
         .breaker.combined .breaker-idx {
           font-style: italic;
         }
@@ -453,8 +432,8 @@ class JackeryCircuitPanelCard extends HTMLElement {
               <div class="bank-label" data-bank="a" style="grid-column: 1; grid-row: 1;">Bank A</div>
               <div class="breaker-divider" style="grid-column: 2; grid-row: 1 / -1;"></div>
               <div class="bank-label" data-bank="b" style="grid-column: 3; grid-row: 1;">Bank B</div>
-              ${this._renderBankItems(bank1, [1, 3, 5, 7, 9, 11], 1)}
-              ${this._renderBankItems(bank2, [2, 4, 6, 8, 10, 12], 3)}
+              ${this._renderBankItems(bankA, [1, 3, 5, 7, 9, 11], 1)}
+              ${this._renderBankItems(bankB, [2, 4, 6, 8, 10, 12], 3)}
             </div>`
         }
       </ha-card>
@@ -467,9 +446,9 @@ class JackeryCircuitPanelCard extends HTMLElement {
 
     // Bind toggle events (only when unlocked)
     if (!this._locked) {
-      this.shadowRoot.querySelectorAll("[data-switch]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          this._toggleCircuit(btn.dataset.switch);
+      this.shadowRoot.querySelectorAll("ha-switch[data-switch]").forEach(sw => {
+        sw.addEventListener("change", () => {
+          this._toggleCircuit(sw.dataset.switch);
         });
       });
     }
@@ -517,11 +496,6 @@ class JackeryCircuitPanelCard extends HTMLElement {
     const color = this._getPowerColor(level);
     const powerDisplay = circuit.power !== null ? `${Math.round(circuit.power)} W` : "\u2014";
     const onClass = circuit.isOn ? "on" : (circuit.isOn === false ? "off" : "");
-    const toggleClass = !circuit.switchEntity
-      ? "unavailable"
-      : this._locked
-        ? (circuit.isOn ? "on locked" : "off locked")
-        : (circuit.isOn ? "on" : "off");
     const barWidth = circuit.power !== null ? Math.min((circuit.power / 2000) * 100, 100) : 0;
 
     return `
@@ -541,9 +515,9 @@ class JackeryCircuitPanelCard extends HTMLElement {
             </div>
           ` : ''}
         </div>
-        <button class="breaker-toggle ${toggleClass}"
-          ${circuit.switchEntity && !this._locked ? `data-switch="${circuit.switchEntity}"` : 'disabled'}
-        ></button>
+        <ha-switch ${circuit.isOn ? 'checked' : ''} ${(!circuit.switchEntity || this._locked) ? 'disabled' : ''}
+          ${circuit.switchEntity && !this._locked ? `data-switch="${circuit.switchEntity}"` : ''}
+        ></ha-switch>
       </div>
     `;
   }
@@ -553,11 +527,6 @@ class JackeryCircuitPanelCard extends HTMLElement {
     const color = this._getPowerColor(level);
     const powerDisplay = circuit.power !== null ? `${Math.round(circuit.power)} W` : "—";
     const onClass = circuit.isOn ? "on" : (circuit.isOn === false ? "off" : "");
-    const toggleClass = !circuit.switchEntity
-      ? "unavailable"
-      : this._locked
-        ? (circuit.isOn ? "on locked" : "off locked")
-        : (circuit.isOn ? "on" : "off");
 
     // Power bar: scale to 2000W max for visual
     const barWidth = circuit.power !== null ? Math.min((circuit.power / 2000) * 100, 100) : 0;
@@ -575,9 +544,9 @@ class JackeryCircuitPanelCard extends HTMLElement {
             </div>
           ` : ''}
         </div>
-        <button class="breaker-toggle ${toggleClass}"
-          ${circuit.switchEntity && !this._locked ? `data-switch="${circuit.switchEntity}"` : 'disabled'}
-        ></button>
+        <ha-switch ${circuit.isOn ? 'checked' : ''} ${(!circuit.switchEntity || this._locked) ? 'disabled' : ''}
+          ${circuit.switchEntity && !this._locked ? `data-switch="${circuit.switchEntity}"` : ''}
+        ></ha-switch>
       </div>
     `;
   }

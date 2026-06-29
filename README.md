@@ -13,10 +13,24 @@ A custom card for managing charge/discharge plans on the Jackery Smart Transfer 
 **Features:**
 - Create, edit, and delete charge/discharge plans directly from the HA UI
 - Toggle individual plans on/off
+- Toggle individual day-of-week scheduling per plan
 - Drag-and-drop reordering (desktop and mobile)
 - Organize plans with custom dividers
 - Lock/unlock editing mode (default: locked)
 - Cross-device persistence of plan order and lock state
+
+### Circuit Panel Card (`jackery-circuit-panel`)
+
+A breaker-panel style card for visualizing and controlling Transfer Switch circuits.
+
+**Features:**
+- Two-bank layout (Bank A / Bank B) matching physical breaker panel
+- Combined split-phase (240V) circuits displayed as double-height breakers
+- Real-time power monitoring with color-coded levels and progress bars
+- Auto-discovers circuit entities or accepts manual `device_prefix` config
+- Lock/unlock circuit controls (default: locked)
+- Full-width layout in sections view
+- Mobile responsive: stacks banks vertically on narrow screens
 
 ## Installation
 
@@ -30,22 +44,29 @@ A custom card for managing charge/discharge plans on the Jackery Smart Transfer 
 
 ### Manual
 
-1. Download `jackery-ts-plan-card.js` from the [latest release](https://github.com/turmacar/jackery-lovelace-cards/releases)
-2. Copy it to `config/www/community/jackery/jackery-ts-plan-card.js`
-3. Add the resource in **Settings → Dashboards → Resources**:
-   - URL: `/local/community/jackery/jackery-ts-plan-card.js`
-   - Type: JavaScript Module
+1. Download `jackery-ts-plan-card.js` and/or `jackery-circuit-panel.js` from the [latest release](https://github.com/turmacar/jackery-lovelace-cards/releases)
+2. Copy to `config/www/community/jackery/`
+3. Add the resources in **Settings → Dashboards → Resources**:
+   - URL: `/local/community/jackery/jackery-ts-plan-card.js` — Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-circuit-panel.js` — Type: JavaScript Module
 
 ## Configuration
 
-Add the card to a dashboard:
+### Transfer Switch Plan Card
 
 ```yaml
-type: custom:jackery-plan-card
+type: custom:jackery-ts-plan-card
 entity: sensor.jackery_<device>_scheduled_plans
 ```
 
-Replace `<device>` with your Transfer Switch device name. If your device is named `transfer_switch` it should be found automatically.
+### Circuit Panel
+
+```yaml
+type: custom:jackery-circuit-panel
+# device_prefix: smart_transfer_switch  # optional, auto-discovered by default
+```
+
+Replace `<device>` with your Transfer Switch device name. Both cards auto-discover entities if your device includes `transfer_switch` in the name.
 
 ## Prerequisites
 
