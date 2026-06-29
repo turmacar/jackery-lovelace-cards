@@ -39,10 +39,9 @@ A 7-day × 24-hour heatmap showing plan coverage at a glance.
 **Features:**
 - Half-hour resolution grid colored by plan type (green=charge, orange=discharge)
 - Overlapping plans shown with striped pattern
-- Current time marker with red indicator
-- Active plan summary counts
-- Disabled plans listed below the grid
-- Full-width layout in sections view
+- Current time marker
+- Schedule overlays (e.g. peak/off-peak) from HA schedule helpers
+- Auto-detects schedules by season via an `input_select` entity
 
 ## Installation
 
@@ -65,18 +64,20 @@ A 7-day × 24-hour heatmap showing plan coverage at a glance.
 
 ## Configuration
 
+All cards auto-discover entities if your device includes `transfer_switch` in the name. Use `entity` to override.
+
 ### Transfer Switch Plan Card
 
 ```yaml
 type: custom:jackery-ts-plan-card
-entity: sensor.jackery_<device>_scheduled_plans
+# entity: sensor.jackery_<device>_scheduled_plans  # optional, auto-discovered
 ```
 
 ### Circuit Panel
 
 ```yaml
 type: custom:jackery-circuit-panel
-# device_prefix: smart_transfer_switch  # optional, auto-discovered by default
+# entity: sensor.jackery_<device>_circuit_1_power  # optional, auto-discovered
 ```
 
 ### Schedule Heatmap
@@ -85,10 +86,16 @@ type: custom:jackery-circuit-panel
 type: custom:jackery-schedule-heatmap
 # entity: sensor.jackery_<device>_scheduled_plans  # optional, auto-discovered
 # title: Schedule Heatmap                          # optional
-# show_disabled: true                              # optional, default true
+# show_plans: true                                 # optional, list active plans below grid
+# season_entity: input_select.my_season            # optional, selects schedule overlays by season
+# schedules:                                       # optional, explicit schedule overlays
+#   - entity: schedule.on_peak_summer
+#     label: On-Peak
+#     color: "rgba(219, 68, 55, 0.25)"
+#   - entity: schedule.morning_discount
+#     label: Discount
+#     color: "rgba(33, 150, 243, 0.25)"
 ```
-
-Replace `<device>` with your Transfer Switch device name. All cards auto-discover entities if your device includes `transfer_switch` in the name.
 
 ## Prerequisites
 

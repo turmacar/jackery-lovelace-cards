@@ -87,6 +87,15 @@ class JackeryCircuitPanelCard extends HTMLElement {
 
   _getDevicePrefix() {
     if (this._config.device_prefix) return this._config.device_prefix;
+    // Derive prefix from entity config
+    if (this._config.entity) {
+      const eid = this._config.entity;
+      const idx = eid.indexOf('_circuit_');
+      if (idx > 0) {
+        const dotIdx = eid.indexOf('.');
+        return dotIdx >= 0 ? eid.substring(dotIdx + 1, idx) : eid.substring(0, idx);
+      }
+    }
     if (!this._hass) return null;
     // Auto-discover: find any entity matching *transfer_switch*circuit*power
     const match = Object.keys(this._hass.states).find(

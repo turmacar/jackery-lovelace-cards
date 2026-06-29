@@ -287,6 +287,7 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
         }
         ha-card {
           padding: 16px;
+          container-type: inline-size;
         }
         .header {
           display: flex;
@@ -326,6 +327,18 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
           grid-template-rows: auto repeat(7, 28px);
           gap: 1px;
           min-width: 500px;
+        }
+        @container (max-width: 500px) {
+          .heatmap {
+            min-width: 0;
+            grid-template-columns: 32px repeat(48, 1fr);
+          }
+          .hour-label {
+            font-size: 0.55em;
+          }
+          .day-label {
+            font-size: 0.65em;
+          }
         }
         .hour-label {
           font-size: 0.65em;

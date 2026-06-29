@@ -24,14 +24,17 @@ class JackeryPlanCard extends HTMLElement {
 
   setConfig(config) {
     this._config = config;
-    this._render();
+    if (this._hass) this._render();
   }
 
   set hass(hass) {
     const prev = this._hass;
     this._hass = hass;
-    // Load saved plan order on first hass set
-    if (!prev && hass) this._loadOrder();
+    // Load saved plan order and lock state on first hass set
+    if (!prev && hass) {
+      this._loadOrder();
+      this._loadLock();
+    }
     // Only re-render when our entity's state object actually changes.
     const entityId = this._resolveEntity();
     if (entityId && prev) {
@@ -98,10 +101,17 @@ class JackeryPlanCard extends HTMLElement {
     try {
       const result = await this._hass.callWS({ type: "frontend/get_user_data", key: this._orderKey() });
       this._cachedOrder = (result && result.value) || [];
-      const lockResult = await this._hass.callWS({ type: "frontend/get_user_data", key: "jackery_plan_locked" });
-      this._locked = !!(lockResult && lockResult.value);
       this._render();
     } catch { this._cachedOrder = []; }
+  }
+
+  async _loadLock() {
+    if (!this._hass) return;
+    try {
+      const result = await this._hass.callWS({ type: "frontend/get_user_data", key: "jackery_plan_locked" });
+      this._locked = (result && result.value !== undefined && result.value !== null) ? !!result.value : true;
+      this._render();
+    } catch { /* default locked */ }
   }
 
   _saveOrder(pids) {
@@ -789,6 +799,10 @@ class JackeryPlanCard extends HTMLElement {
 
   getCardSize() {
     return 3;
+  }
+
+  getGridOptions() {
+    return { columns: "full", min_columns: 6 };
   }
 
   static getStubConfig() {
