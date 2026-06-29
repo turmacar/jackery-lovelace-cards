@@ -10,6 +10,8 @@ Custom Lovelace cards for the [Jackery Home Assistant Integration](https://githu
 
 A custom card for managing charge/discharge plans on the Jackery Smart Transfer Switch.
 
+![Charging Plans](screenshots/Charging%20Plans.png)
+
 **Features:**
 - Create, edit, and delete charge/discharge plans directly from the HA UI
 - Toggle individual plans on/off
@@ -23,6 +25,8 @@ A custom card for managing charge/discharge plans on the Jackery Smart Transfer 
 
 A breaker-panel style card for visualizing and controlling Transfer Switch circuits.
 
+![Circuit Panel](screenshots/Circuit_Panel.png)
+
 **Features:**
 - Two-bank layout (Bank A / Bank B) matching physical breaker panel
 - Combined split-phase (240V) circuits displayed as double-height breakers
@@ -35,6 +39,8 @@ A breaker-panel style card for visualizing and controlling Transfer Switch circu
 ### Schedule Heatmap Card (`jackery-schedule-heatmap`)
 
 A 7-day × 24-hour heatmap showing plan coverage at a glance.
+
+![Schedule Heatmap](screenshots/Schedule%20Heatmap.png)
 
 **Features:**
 - Half-hour resolution grid colored by plan type (green=charge, orange=discharge)
