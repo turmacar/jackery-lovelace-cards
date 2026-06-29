@@ -182,7 +182,7 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
       return this._config.schedules.map(s => ({
         entity: s.entity,
         label: s.label || this._entityToLabel(s.entity),
-        color: s.color || 'rgba(219, 68, 55, 0.2)',
+        color: s.color || 'rgba(219, 68, 55, 0.25)',
       }));
     }
     // Auto-detect from season
@@ -192,10 +192,10 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
     const season = seasonState ? seasonState.state.toLowerCase() : null;
     const result = [];
     if (season === 'summer') {
-      result.push({ entity: 'schedule.avista_on_peak_summer', label: 'On-Peak', color: 'rgba(219, 68, 55, 0.2)' });
-      result.push({ entity: 'schedule.avista_morning_discount_summer', label: 'Discount', color: 'rgba(33, 150, 243, 0.2)' });
+      result.push({ entity: 'schedule.avista_on_peak_summer', label: 'On-Peak', color: 'rgba(219, 68, 55, 0.25)' });
+      result.push({ entity: 'schedule.avista_morning_discount_summer', label: 'Discount', color: 'rgba(33, 150, 243, 0.25)' });
     } else if (season === 'winter') {
-      result.push({ entity: 'schedule.avista_on_peak_winter', label: 'On-Peak', color: 'rgba(219, 68, 55, 0.2)' });
+      result.push({ entity: 'schedule.avista_on_peak_winter', label: 'On-Peak', color: 'rgba(219, 68, 55, 0.25)' });
     }
     return result;
   }
@@ -391,7 +391,7 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
           bottom: 0;
           left: 0;
           right: 0;
-          height: 3px;
+          height: 7px;
           pointer-events: none;
         }
         .now-marker {
@@ -399,7 +399,8 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
           top: 0;
           bottom: 0;
           width: 2px;
-          background: var(--error-color, #db4437);
+          background: #fff;
+          box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.6);
           z-index: 2;
           pointer-events: none;
         }
@@ -410,7 +411,8 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: var(--error-color, #db4437);
+          background: #fff;
+          box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.6);
         }
         .legend {
           display: flex;
@@ -445,7 +447,8 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
         .legend-swatch.now {
           width: 2px;
           height: 14px;
-          background: var(--error-color, #db4437);
+          background: #fff;
+          box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.4);
           border-radius: 1px;
         }
         .no-plans {
@@ -543,7 +546,7 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
         const bgStyle = sched ? ` --schedule-bg:${sched.color};` : '';
         let inner = '';
         if (sched) {
-          inner += `<div class="schedule-stripe" style="background:${sched.color.replace('0.2', '0.6')}"></div>`;
+          inner += `<div class="schedule-stripe" style="background:${sched.color.replace('0.25', '0.8')}"></div>`;
         }
         if (isToday && slot === now.slot) {
           const leftPct = now.pct * 100;
