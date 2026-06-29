@@ -249,6 +249,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
           padding: 16px;
           box-sizing: border-box;
           height: 100%;
+          container-type: inline-size;
         }
         .header {
           display: flex;
@@ -279,7 +280,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
           gap: 6px 8px;
           align-items: stretch;
         }
-        @media (max-width: 600px) {
+        @container (max-width: 500px) {
           .panel {
             grid-template-columns: 1fr;
             grid-template-rows: auto;
