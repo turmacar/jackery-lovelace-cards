@@ -14,6 +14,8 @@ class JackeryCircuitPanelCard extends HTMLElement {
     this._hass = null;
     this._locked = true;
     this._cachedCircuits = [];
+    this._optimisticToggles = new Map(); // switchEntity -> {isOn, expiry}
+    this._loadCachedCircuits();
   }
 
   connectedCallback() {
@@ -64,6 +66,24 @@ class JackeryCircuitPanelCard extends HTMLElement {
       this._locked = (result && result.value !== undefined && result.value !== null) ? !!result.value : true;
       this._render();
     } catch { /* default locked */ }
+  }
+
+  _loadCachedCircuits() {
+    try {
+      const raw = localStorage.getItem("jackery_circuit_panel_cache");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this._cachedCircuits = parsed;
+        }
+      }
+    } catch { /* ignore corrupt cache */ }
+  }
+
+  _saveCachedCircuits() {
+    try {
+      localStorage.setItem("jackery_circuit_panel_cache", JSON.stringify(this._cachedCircuits));
+    } catch { /* storage full or unavailable */ }
   }
 
   _toggleLock() {
@@ -171,18 +191,41 @@ class JackeryCircuitPanelCard extends HTMLElement {
     if (this._cachedCircuits.length > 0) {
       const cacheMap = new Map(this._cachedCircuits.map(c => [c.circuitIndex, c]));
       for (const c of circuits) {
-        if (!c.stateAvailable) {
-          const cached = cacheMap.get(c.circuitIndex);
-          if (cached) {
-            // If switch is off, show 0W; otherwise use cached power
-            c.power = c.isOn === false ? 0 : cached.power;
-            if (c.isOn === null) c.isOn = cached.isOn;
+        const cached = cacheMap.get(c.circuitIndex);
+        if (!c.stateAvailable && cached) {
+          // Restore power, switch state, and name from cache when entity unavailable
+          c.power = c.isOn === false ? 0 : cached.power;
+          if (c.isOn === null) c.isOn = cached.isOn;
+          if (c.name === "Circuit " + c.circuitSlug.replace(/_/g, " ") && cached.name) {
+            c.name = cached.name;
           }
         }
       }
     }
-    // Update cache with current good data
-    this._cachedCircuits = circuits.map(c => ({ ...c }));
+
+    // Apply optimistic toggle overrides (prevent visual switch revert)
+    const now = Date.now();
+    for (const [entity, toggle] of this._optimisticToggles) {
+      if (now > toggle.expiry) {
+        this._optimisticToggles.delete(entity);
+        continue;
+      }
+      const c = circuits.find(ci => ci.switchEntity === entity);
+      if (c) {
+        // If coordinator has caught up, remove the optimistic override
+        if (c.isOn === toggle.isOn) {
+          this._optimisticToggles.delete(entity);
+        } else {
+          c.isOn = toggle.isOn;
+        }
+      }
+    }
+
+    // Update cache only when we have actual circuit data (never overwrite with empty)
+    if (circuits.length > 0) {
+      this._cachedCircuits = circuits.map(c => ({ ...c }));
+      this._saveCachedCircuits();
+    }
 
     return circuits;
   }
@@ -211,15 +254,26 @@ class JackeryCircuitPanelCard extends HTMLElement {
     if (!this._hass || !switchEntity) return;
     const state = this._hass.states[switchEntity];
     if (!state) return;
-    const service = state.state === "on" ? "turn_off" : "turn_on";
+    const newState = state.state !== "on";
+    const service = newState ? "turn_on" : "turn_off";
+    // Apply optimistic update so switch doesn't visually revert
+    // while waiting for the MQTT circuit query to confirm (~3 min)
+    this._optimisticToggles.set(switchEntity, {
+      isOn: newState,
+      expiry: Date.now() + 5 * 60 * 1000, // 5 min TTL
+    });
+    this._render();
     try {
       await this._hass.callService("switch", service, {
         entity_id: switchEntity,
       });
-      // Schedule re-renders to pick up updated states without waiting for full integration refresh
+      // Schedule re-renders to pick up updated states
       setTimeout(() => this._render(), 1500);
       setTimeout(() => this._render(), 4000);
     } catch (e) {
+      // Revert optimistic update on error
+      this._optimisticToggles.delete(switchEntity);
+      this._render();
       console.error("[jackery-circuit-panel] toggle error", e);
     }
   }
