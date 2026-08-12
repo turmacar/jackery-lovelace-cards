@@ -253,11 +253,32 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
 
   _getNowPosition() {
     const now = new Date();
-    // JS getDay(): 0=Sun, we need 0=Mon
-    const jsDay = now.getDay();
-    const day = jsDay === 0 ? 6 : jsDay - 1;
-    const slot = now.getHours() * 2 + (now.getMinutes() >= 30 ? 1 : 0);
-    const minuteInSlot = now.getMinutes() % 30;
+    const tz = this._hass?.config?.time_zone;
+    let day, hours, minutes;
+    if (tz) {
+      // Use HA's configured timezone rather than the browser's local timezone
+      const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: tz,
+          weekday: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }).formatToParts(now).map(p => [p.type, p.value])
+      );
+      const weekdayMap = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+      day = weekdayMap[parts.weekday] ?? 0;
+      hours = parseInt(parts.hour, 10) % 24; // normalize 24 → 0 at midnight
+      minutes = parseInt(parts.minute, 10);
+    } else {
+      // Fallback to browser local time if HA config is unavailable
+      const jsDay = now.getDay();
+      day = jsDay === 0 ? 6 : jsDay - 1;
+      hours = now.getHours();
+      minutes = now.getMinutes();
+    }
+    const slot = hours * 2 + (minutes >= 30 ? 1 : 0);
+    const minuteInSlot = minutes % 30;
     const pct = minuteInSlot / 30;
     return { day, slot, pct };
   }
