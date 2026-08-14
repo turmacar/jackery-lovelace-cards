@@ -70,34 +70,26 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
   async _fetchScheduleData() {
     if (!this._hass) return;
     const schedules = this._resolveSchedules();
-    if (schedules.length === 0) return;
+    if (schedules.length === 0) {
+      this._scheduleDataLoaded = true;
+      this._render();
+      return;
+    }
     const entities = schedules.map(s => s.entity).filter(Boolean);
     try {
-      const result = await this._hass.callService('schedule', 'get_schedule', {}, {
-        entity_id: entities,
-      }, false, true);  // return_response = true
-      if (result && result.response) {
-        this._scheduleData = result.response;
-      } else if (result) {
-        // Some HA versions return the response directly
-        this._scheduleData = result;
-      }
+      // callWS with return_response avoids callService signature drift across HA versions
+      const result = await this._hass.callWS({
+        type: 'call_service',
+        domain: 'schedule',
+        service: 'get_schedule',
+        service_data: {},
+        target: { entity_id: entities },
+        return_response: true,
+      });
+      this._scheduleData = result?.response ?? result ?? {};
     } catch (e) {
-      console.warn('[jackery-schedule-heatmap] Failed to fetch schedule data, trying callWS', e);
-      // Fallback: try calling via WS directly
-      try {
-        const wsResult = await this._hass.callWS({
-          type: 'execute_script',
-          sequence: [{
-            action: 'schedule.get_schedule',
-            target: { entity_id: entities },
-            response_variable: 'schedules',
-          }],
-        });
-        if (wsResult) this._scheduleData = wsResult;
-      } catch (e2) {
-        console.warn('[jackery-schedule-heatmap] WS fallback also failed', e2);
-      }
+      console.error('[jackery-schedule-heatmap] schedule.get_schedule failed:', e);
+      this._scheduleData = {};
     }
     this._scheduleDataLoaded = true;
     this._render();
