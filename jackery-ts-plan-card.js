@@ -1,5 +1,5 @@
 /**
- * Jackery Transfer Switch Plan Card — Custom Lovelace card for managing
+ * Jackery Transfer Switch Plan Card - Custom Lovelace card for managing
  * charge/discharge plans on the Jackery Smart Transfer Switch.
  *
  * Reads plan data from a sensor entity's attributes and provides
@@ -83,7 +83,7 @@ class JackeryPlanCard extends HTMLElement {
     return this._applySavedOrder(plans, entityId);
   }
 
-  /** For backwards compat — returns only actual plans (no dividers) */
+  /** For backwards compat - returns only actual plans (no dividers) */
   _getPlans() {
     return this._getItems().filter(x => !x._divider);
   }
@@ -562,7 +562,7 @@ class JackeryPlanCard extends HTMLElement {
             <div class="divider" ${!this._locked ? 'draggable="true"' : ''} data-item-idx="${i}">
               ${!this._locked ? '<span class="drag-handle">⠿</span>' : ''}
               <div class="divider-line"></div>
-              <span class="divider-label" ${!this._locked ? `data-edit-divider="${i}"` : ''}>${item.label || "—"}</span>
+              <span class="divider-label" ${!this._locked ? `data-edit-divider="${i}"` : ''}>${item.label || "-"}</span>
               <div class="divider-line"></div>
               ${!this._locked ? `<button class="divider-remove" data-remove-divider="${i}" title="Remove divider">✕</button>` : ''}
             </div>
