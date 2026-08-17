@@ -1,5 +1,5 @@
 /**
- * Jackery Schedule Heatmap Card — Custom Lovelace card that shows a
+ * Jackery Schedule Heatmap Card - Custom Lovelace card that shows a
  * 7-day × 24-hour grid of charge/discharge plan coverage for the
  * Jackery Smart Transfer Switch.
  *

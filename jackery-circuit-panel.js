@@ -1,5 +1,5 @@
 /**
- * Jackery Circuit Panel Card — Custom Lovelace card for visualizing
+ * Jackery Circuit Panel Card - Custom Lovelace card for visualizing
  * and controlling Transfer Switch circuits in a breaker-panel layout.
  *
  * Auto-discovers circuit entities by device name prefix, or accepts
@@ -547,7 +547,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
       // Check if this slot is a partner of a combined circuit in this bank
       const primary = this._combinedMap.get(i);
       if (primary && slots.includes(primary.circuitIndex)) {
-        // Will be rendered as part of the combined breaker — skip
+        // Will be rendered as part of the combined breaker - skip
         continue;
       }
       html += `<div class="empty-slot" data-bank="${gridColumn === 1 ? 'a' : 'b'}" style="grid-column: ${gridColumn}; grid-row: ${gridRow};"><span>${i}</span></div>`;
