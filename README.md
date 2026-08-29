@@ -6,6 +6,19 @@ Custom Lovelace cards for the [Jackery Home Assistant Integration](https://githu
 
 ## Cards
 
+### Power Status Card (`jackery-power-status-card`)
+
+A single-glance card combining solar input status with grid/battery input status, instead
+of several disconnected native HA tiles.
+
+**Features:**
+- Solar panel input power and solar type/parallel-connection status (from a solar-capable
+  portable device)
+- Grid/battery status: power system state (Grid/Station), input/output power, battery %,
+  working mode, backup reserve, UPS mode and force charge indicators
+- Falls back to a portable device's own battery info if no Transfer Switch is present
+- Auto-discovers both devices; either half degrades gracefully if its device is missing
+
 ### Transfer Switch Plan Card (`jackery-ts-plan-card`)
 
 A custom card for managing charge/discharge plans on the Jackery Smart Transfer Switch.
@@ -67,10 +80,20 @@ A 7-day × 24-hour heatmap showing plan coverage at a glance.
    - URL: `/local/community/jackery/jackery-ts-plan-card.js` — Type: JavaScript Module
    - URL: `/local/community/jackery/jackery-circuit-panel.js` — Type: JavaScript Module
    - URL: `/local/community/jackery/jackery-schedule-heatmap.js` — Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-power-status-card.js` — Type: JavaScript Module
 
 ## Configuration
 
 All cards auto-discover entities if your device includes `transfer_switch` in the name. Use `entity` to override.
+
+### Power Status Card
+
+```yaml
+type: custom:jackery-power-status-card
+# title: Power Status                          # optional
+# switch_device_prefix: basement_smart_transfer_switch  # optional, auto-discovered
+# solar_device_prefix: explorer_5000                     # optional, auto-discovered
+```
 
 ### Transfer Switch Plan Card
 
