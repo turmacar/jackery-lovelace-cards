@@ -93,6 +93,7 @@ type: custom:jackery-power-status-card
 # title: Power Status                          # optional
 # switch_device_prefix: basement_smart_transfer_switch  # optional, auto-discovered
 # solar_device_prefix: explorer_5000                     # optional, auto-discovered
+# solar_efficiency_entity: sensor.solar_efficiency        # optional, not auto-discovered (requires a weather-based helper, e.g. Tempest station that provides W/m^2 or similar) (the absolute best panels in the absolute best conditions max out around 20-30%)
 ```
 
 ### Transfer Switch Plan Card

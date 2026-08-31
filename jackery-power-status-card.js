@@ -147,6 +147,7 @@ class JackeryPowerStatusCard extends HTMLElement {
       this._findEntity("_ac_power_solar_panel", "sensor"),
       this._findEntity("_solar_status", "sensor"),
       this._findEntity("_parallel_connection", "sensor"),
+      this._config.solar_efficiency_entity || null,
     ];
     if (gbPrefix) {
       ids.push(`sensor.${gbPrefix}_total_input_power`, `sensor.${gbPrefix}_output_power`, `sensor.${gbPrefix}_remaining_battery`);
@@ -231,6 +232,8 @@ class JackeryPowerStatusCard extends HTMLElement {
     const solarType = this._text(this._findEntity("_solar_status", "sensor"));
     const parallel = this._text(this._findEntity("_parallel_connection", "sensor"));
     const solarActive = solarPower !== null && solarPower > 0;
+    // Optional: requires a user-configured template helper (e.g. built from a Tempest weather station), not auto-discovered
+    const solarEfficiency = this._config.solar_efficiency_entity ? this._num(this._config.solar_efficiency_entity) : null;
 
     // Grid/battery half: prefer the Transfer Switch, fall back to the solar device itself
     const gbPrefix = switchPrefix || solarPrefix;
@@ -417,6 +420,11 @@ class JackeryPowerStatusCard extends HTMLElement {
                     <div class="metric-power">
                       ${solarType ? `<div class="power-line"><ha-icon icon="mdi:solar-power-variant"></ha-icon>${solarType}</div>` : ""}
                       ${parallel && parallel !== "None" ? `<div class="power-line"><ha-icon icon="mdi:battery-sync"></ha-icon>${parallel}</div>` : ""}
+                    </div>
+                  ` : ""}
+                  ${solarEfficiency !== null ? `
+                    <div class="metric-power">
+                      <div class="power-line"><ha-icon icon="mdi:gauge"></ha-icon>${Math.round(solarEfficiency)}% Efficiency</div>
                     </div>
                   ` : ""}
                 </div>
