@@ -614,7 +614,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
   _renderBreaker(circuit, gridColumn, gridRow) {
     const level = this._getPowerLevel(circuit.power);
     const color = this._getPowerColor(level);
-    const powerDisplay = circuit.power !== null ? `${Math.round(circuit.power)} W` : "—";
+    const powerDisplay = circuit.power !== null ? `${Math.round(circuit.power)} W` : "\u2014";
     const onClass = circuit.isOn ? "on" : (circuit.isOn === false ? "off" : "");
 
     // Power bar: scale to 2000W max for visual

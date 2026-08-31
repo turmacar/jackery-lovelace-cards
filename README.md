@@ -62,6 +62,24 @@ A 7-day × 24-hour heatmap showing plan coverage at a glance.
 - Schedule overlays (e.g. peak/off-peak) from HA schedule helpers
 - Auto-detects schedules by season via an `input_select` entity
 
+### Battery Pack Status Card (`jackery-battery-pack-card`)
+
+Side-by-side AC1/AC2 battery slot display for the Smart Transfer Switch, with per-add-on-pack
+detail.
+
+**Features:**
+- Battery %, input/output power, and charging status for each slot
+- Per-slot solar input power (each device in AC1/AC2 can have its own solar array), shown
+  separately from grid input/output
+- Time-to-full (while charging) or time-remaining (while discharging)
+- Add-on battery pack count and per-pack battery level chips (serial number on hover)
+- Slots with no device connected show a "Not Connected" placeholder instead of blank data
+- Auto-discovers the Transfer Switch device; either slot degrades gracefully
+
+> **Known limitation:** The Transfer Switch's real-time MQTT push doesn't include the
+> nested AC1/AC2 slot data. This card's numbers are only as fresh as the integration's
+> ~60s HTTP poll cycle. Values lag up to a minute.
+
 ## Installation
 
 ### HACS (Recommended)
@@ -77,14 +95,23 @@ A 7-day × 24-hour heatmap showing plan coverage at a glance.
 1. Download card JS files from the [latest release](https://github.com/turmacar/jackery-lovelace-cards/releases)
 2. Copy to `config/www/community/jackery/`
 3. Add the resources in **Settings → Dashboards → Resources**:
-   - URL: `/local/community/jackery/jackery-ts-plan-card.js` — Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-circuit-panel.js` — Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-schedule-heatmap.js` — Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-power-status-card.js` — Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-ts-plan-card.js` - Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-circuit-panel.js` - Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-schedule-heatmap.js` - Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-power-status-card.js` - Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-battery-pack-card.js` - Type: JavaScript Module
 
 ## Configuration
 
 All cards auto-discover entities if your device includes `transfer_switch` in the name. Use `entity` to override.
+
+### Battery Pack Status Card
+
+```yaml
+type: custom:jackery-battery-pack-card
+# title: Battery Packs             # optional
+# device_prefix: basement_smart_transfer_switch  # optional, auto-discovered
+```
 
 ### Power Status Card
 

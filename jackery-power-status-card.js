@@ -328,6 +328,7 @@ class JackeryPowerStatusCard extends HTMLElement {
           gap: 6px;
           font-size: 0.85em;
           color: var(--secondary-text-color);
+          white-space: nowrap;
         }
         .power-line ha-icon { --mdc-icon-size: 16px; }
         @container (min-width: 260px) {
@@ -416,15 +417,11 @@ class JackeryPowerStatusCard extends HTMLElement {
                     <span class="num">${solarPower !== null ? Math.round(solarPower) : "\u2014"}</span>
                     <span class="unit">W</span>
                   </div>
-                  ${solarType || (parallel && parallel !== "None") ? `
+                  ${solarType || (parallel && parallel !== "None") || solarEfficiency !== null ? `
                     <div class="metric-power">
                       ${solarType ? `<div class="power-line"><ha-icon icon="mdi:solar-power-variant"></ha-icon>${solarType}</div>` : ""}
                       ${parallel && parallel !== "None" ? `<div class="power-line"><ha-icon icon="mdi:battery-sync"></ha-icon>${parallel}</div>` : ""}
-                    </div>
-                  ` : ""}
-                  ${solarEfficiency !== null ? `
-                    <div class="metric-power">
-                      <div class="power-line"><ha-icon icon="mdi:gauge"></ha-icon>${Math.round(solarEfficiency)}% Efficiency</div>
+                      ${solarEfficiency !== null ? `<div class="power-line"><ha-icon icon="mdi:gauge"></ha-icon>${Math.round(solarEfficiency)}% Efficiency</div>` : ""}
                     </div>
                   ` : ""}
                 </div>
