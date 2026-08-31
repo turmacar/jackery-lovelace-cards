@@ -117,13 +117,14 @@ class JackeryCircuitPanelCard extends HTMLElement {
       }
     }
     if (!this._hass) return null;
-    // Auto-discover: find any entity matching *transfer_switch*circuit*power
+    // Auto-discover: find any circuit power sensor by its circuit_index attribute
+    // (entity_id suffix isn't reliable - legacy entities can retain a stale id).
     const match = Object.keys(this._hass.states).find(
-      k => k.startsWith("sensor.") && k.includes("circuit") && k.endsWith("_power")
-        && k.includes("transfer_switch")
+      k => k.startsWith("sensor.") && k.includes("_circuit_")
+        && this._hass.states[k].attributes.circuit_index !== undefined
     );
     if (!match) return null;
-    // Extract prefix: everything before "circuit_"
+    // Extract prefix: everything before "_circuit_"
     const idx = match.indexOf("_circuit_");
     return idx > 0 ? match.substring(7, idx) : null; // strip "sensor."
   }
@@ -134,31 +135,39 @@ class JackeryCircuitPanelCard extends HTMLElement {
     if (!prefix) return [];
 
     const circuits = [];
-    const sensorPrefix = `sensor.${prefix}_circuit_`;
-    const switchPrefix = `switch.${prefix}_circuit_`;
+    const sensorPrefix = `sensor.${prefix}`;
+    const switchPrefix = `switch.${prefix}`;
 
-    // Find all circuit power sensors
+    // Identify circuit entities by their circuit_index attribute rather than
+    // by parsing the entity_id - legacy circuits can keep a stale entity_id
+    // (e.g. from before a rename) that no longer matches the "_circuit_<n>_power"
+    // convention, which previously caused them to be silently dropped.
+    const switchByIndex = new Map();
+    for (const k of Object.keys(this._hass.states)) {
+      if (!k.startsWith(switchPrefix)) continue;
+      const ci = this._hass.states[k].attributes.circuit_index;
+      if (ci !== undefined) switchByIndex.set(ci, k);
+    }
+
     const powerEntities = Object.keys(this._hass.states)
-      .filter(k => k.startsWith(sensorPrefix) && k.endsWith("_power"))
+      .filter(k => k.startsWith(sensorPrefix) && this._hass.states[k].attributes.circuit_index !== undefined)
       .sort();
 
     for (const powerEntity of powerEntities) {
-      // Extract circuit name: between prefix_circuit_ and _power
-      const afterPrefix = powerEntity.substring(sensorPrefix.length);
-      const circuitSlug = afterPrefix.replace(/_power$/, "");
-
-      const switchEntity = `${switchPrefix}${circuitSlug}`;
       const powerState = this._hass.states[powerEntity];
-      const switchState = this._hass.states[switchEntity];
+      const circuitIndex = powerState.attributes.circuit_index;
+      const switchEntity = switchByIndex.get(circuitIndex) || null;
+      const switchState = switchEntity ? this._hass.states[switchEntity] : null;
+      const circuitSlug = String(circuitIndex);
 
-      // Get short name: prefer circuit_name attribute, fall back to slug
+      // Get short name: prefer circuit_name attribute, fall back to index
       let name;
-      if (powerState && powerState.attributes.circuit_name) {
+      if (powerState.attributes.circuit_name) {
         name = "Circuit " + powerState.attributes.circuit_name;
       } else if (switchState && switchState.attributes.circuit_name) {
         name = "Circuit " + switchState.attributes.circuit_name;
       } else {
-        name = "Circuit " + circuitSlug.replace(/_/g, " ");
+        name = "Circuit " + circuitSlug;
       }
 
       const power = powerState ? parseFloat(powerState.state) : null;
@@ -166,7 +175,6 @@ class JackeryCircuitPanelCard extends HTMLElement {
       const isOn = switchState ? (switchUnavailable ? null : switchState.state === "on") : null;
       const stateAvailable = powerState && powerState.state !== "unavailable" && powerState.state !== "unknown";
       const combined = powerState?.attributes?.combined === true;
-      const circuitIndex = powerState?.attributes?.circuit_index;
       const partnerIndex = powerState?.attributes?.split_phase_partner || null;
 
       circuits.push({
@@ -179,7 +187,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
         stateAvailable,
         combined,
         powerEntity,
-        switchEntity: this._hass.states[switchEntity] ? switchEntity : null,
+        switchEntity,
       });
     }
 
@@ -295,6 +303,23 @@ class JackeryCircuitPanelCard extends HTMLElement {
       }
     }
 
+    // Derive slot ranges from the actual reported indices instead of a
+    // hardcoded 1-12 range, so devices that report 0-indexed circuits (idx 0)
+    // or more/fewer than 12 circuits are still fully displayed.
+    const allIndices = [];
+    for (const c of circuits) {
+      allIndices.push(c.circuitIndex);
+      if (c.partnerIndex) allIndices.push(c.partnerIndex);
+    }
+    const minIdx = allIndices.length ? Math.min(...allIndices) : 1;
+    const maxIdx = allIndices.length ? Math.max(...allIndices) : 12;
+    const slotsA = [];
+    const slotsB = [];
+    for (let i = minIdx; i <= maxIdx; i++) {
+      (i % 2 === 1 ? slotsA : slotsB).push(i);
+    }
+    const rowCount = Math.max(slotsA.length, slotsB.length, 1);
+
     // Track whether we've successfully found circuits (stops retry re-renders)
     this._hasRenderedCircuits = circuits.length > 0;
 
@@ -339,7 +364,7 @@ class JackeryCircuitPanelCard extends HTMLElement {
         .panel {
           display: grid;
           grid-template-columns: 1fr auto 1fr;
-          grid-template-rows: auto repeat(6, minmax(48px, auto));
+          grid-template-rows: auto repeat(${rowCount}, minmax(48px, auto));
           gap: 6px 8px;
           align-items: stretch;
         }
@@ -496,8 +521,8 @@ class JackeryCircuitPanelCard extends HTMLElement {
               <div class="bank-label" data-bank="a" style="grid-column: 1; grid-row: 1;">Bank A</div>
               <div class="breaker-divider" style="grid-column: 2; grid-row: 1 / -1;"></div>
               <div class="bank-label" data-bank="b" style="grid-column: 3; grid-row: 1;">Bank B</div>
-              ${this._renderBankItems(bankA, [1, 3, 5, 7, 9, 11], 1)}
-              ${this._renderBankItems(bankB, [2, 4, 6, 8, 10, 12], 3)}
+              ${this._renderBankItems(bankA, slotsA, 1)}
+              ${this._renderBankItems(bankB, slotsB, 3)}
             </div>`
         }
       </ha-card>
