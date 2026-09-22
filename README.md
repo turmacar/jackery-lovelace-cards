@@ -19,6 +19,24 @@ of several disconnected native HA tiles.
 - Falls back to a portable device's own battery info if no Transfer Switch is present
 - Auto-discovers both devices; either half degrades gracefully if its device is missing
 
+### Portable Station Card (`jackery-portable-card`)
+
+The portable counterpart to the Power Status card: a single-glance status and output-control
+card for an Explorer-series portable power station.
+
+**Features:**
+- Battery %, charge/discharge status, level bar, and time-to-full / time-remaining
+- Total input and output power, broken down by AC / DC / solar input and per-port output
+  (only ports the device actually reports are shown)
+- AC output voltage/frequency, battery temperature, parallel-connection status
+- Toggle chips for AC / DC / USB / Car outputs and Super Fast Charge
+- Mode chips for battery protection, charge speed, light mode, Transfer Switch connection
+  and AC pass-through
+- Alarm banner for temperature/power alarms and error codes
+- Lock/unlock controls (default: locked)
+- Resolves the device from the HA device registry (not entity-id naming), skipping Transfer
+  Switches; override with `device` (device name or device id)
+
 ### Transfer Switch Plan Card (`jackery-ts-plan-card`)
 
 A custom card for managing charge/discharge plans on the Jackery Smart Transfer Switch.
@@ -100,6 +118,7 @@ detail.
    - URL: `/local/community/jackery/jackery-schedule-heatmap.js` - Type: JavaScript Module
    - URL: `/local/community/jackery/jackery-power-status-card.js` - Type: JavaScript Module
    - URL: `/local/community/jackery/jackery-battery-pack-card.js` - Type: JavaScript Module
+   - URL: `/local/community/jackery/jackery-portable-card.js` - Type: JavaScript Module
 
 ## Configuration
 
@@ -121,6 +140,15 @@ type: custom:jackery-power-status-card
 # switch_device_prefix: basement_smart_transfer_switch  # optional, auto-discovered
 # solar_device_prefix: explorer_5000                     # optional, auto-discovered
 # solar_efficiency_entity: sensor.solar_efficiency        # optional, not auto-discovered (requires a weather-based helper, e.g. Tempest station that provides W/m^2 or similar) (the absolute best panels in the absolute best conditions max out around 20-30%)
+```
+
+### Portable Station Card
+
+```yaml
+type: custom:jackery-portable-card
+# title: Explorer 300 Plus          # optional, defaults to the device name
+# device: Explorer 300 Plus         # optional, device name or device id; overrides auto-discovery
+# device_prefix: explorer_300_plus  # optional, legacy entity-id prefix; overrides `device`
 ```
 
 ### Transfer Switch Plan Card
