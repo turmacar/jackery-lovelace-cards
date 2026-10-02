@@ -106,18 +106,25 @@ detail.
 2. Add `https://github.com/turmacar/jackery-lovelace-cards` as type **Dashboard**
 3. Download **Jackery Lovelace Cards**, then reload the browser when prompted
 
-HACS registers a single resource, `jackery-lovelace-cards.js`, which loads all
-six cards. No manual resources or restart needed.
+HACS installs a single bundled file, `dist/jackery-lovelace-cards.js`, containing
+all six cards. No manual resources or restart needed.
 
 ### Manual
 
-1. Download all `.js` files from the [repository](https://github.com/turmacar/jackery-lovelace-cards)
-2. Copy them to `config/www/community/jackery/`
+1. Download [`dist/jackery-lovelace-cards.js`](https://github.com/turmacar/jackery-lovelace-cards/blob/main/dist/jackery-lovelace-cards.js)
+2. Copy it to `config/www/community/jackery/`
 3. Add one resource in **Settings -> Dashboards -> Resources**:
    - URL: `/local/community/jackery/jackery-lovelace-cards.js` - Type: JavaScript Module
-4. After updating the files, bump a `?v=N` query on that URL so browsers fetch the new version.
+4. After updating the file, bump a `?v=N` query on that URL so browsers fetch the new version.
 
 Don't keep both installs: remove the manual resources before switching to HACS.
+
+### Development
+
+Edit the `jackery-*.js` sources in the repo root, then run `scripts/build.sh` to
+regenerate `dist/jackery-lovelace-cards.js` and commit both. To release, bump
+`VERSION`, rebuild, commit, push, then tag (e.g. `git tag 1.0.1 && git push origin 1.0.1`).
+The release workflow fails if `VERSION` doesn't match the tag or `dist/` is stale.
 
 ## Configuration
 

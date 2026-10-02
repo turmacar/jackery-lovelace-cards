@@ -39,6 +39,24 @@ jobs:
             echo "valid=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check out tag
+        if: steps.semver.outputs.valid == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.resolve_tag_dispatch.outputs.tag || steps.resolve_tag_push.outputs.tag }}
+
+      - name: Verify bundle is built and versioned
+        if: steps.semver.outputs.valid == 'true'
+        env:
+          TAG: ${{ steps.resolve_tag_dispatch.outputs.tag || steps.resolve_tag_push.outputs.tag }}
+        run: |
+          if [[ "$(cat VERSION)" != "$TAG" ]]; then
+            echo "VERSION '$(cat VERSION)' does not match tag '$TAG'" >&2
+            exit 1
+          fi
+          ./scripts/build.sh
+          git diff --exit-code dist/ || { echo "dist/ is stale - run scripts/build.sh and commit" >&2; exit 1; }
+
       - name: Create GitHub release
         if: steps.semver.outputs.valid == 'true'
         env:
