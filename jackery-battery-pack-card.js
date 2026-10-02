@@ -359,7 +359,9 @@ class JackeryBatteryPackCard extends HTMLElement {
   }
 }
 
-customElements.define("jackery-battery-pack-card", JackeryBatteryPackCard);
+if (!customElements.get("jackery-battery-pack-card")) {
+  customElements.define("jackery-battery-pack-card", JackeryBatteryPackCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({

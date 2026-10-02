@@ -489,7 +489,9 @@ class JackeryPortableCard extends HTMLElement {
   }
 }
 
-customElements.define("jackery-portable-card", JackeryPortableCard);
+if (!customElements.get("jackery-portable-card")) {
+  customElements.define("jackery-portable-card", JackeryPortableCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({

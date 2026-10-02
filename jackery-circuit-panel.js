@@ -656,7 +656,9 @@ class JackeryCircuitPanelCard extends HTMLElement {
   }
 }
 
-customElements.define("jackery-circuit-panel", JackeryCircuitPanelCard);
+if (!customElements.get("jackery-circuit-panel")) {
+  customElements.define("jackery-circuit-panel", JackeryCircuitPanelCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({

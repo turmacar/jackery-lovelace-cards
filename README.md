@@ -102,23 +102,22 @@ detail.
 
 ### HACS (Recommended)
 
-1. Open HACS → Frontend
-2. Click the three-dot menu → Custom repositories
-3. Add `https://github.com/turmacar/jackery-lovelace-cards` as a **Lovelace** repository
-4. Install **Jackery Lovelace Cards**
-5. Restart Home Assistant
+1. Open HACS, click the three-dot menu -> **Custom repositories**
+2. Add `https://github.com/turmacar/jackery-lovelace-cards` as type **Dashboard**
+3. Download **Jackery Lovelace Cards**, then reload the browser when prompted
+
+HACS registers a single resource, `jackery-lovelace-cards.js`, which loads all
+six cards. No manual resources or restart needed.
 
 ### Manual
 
-1. Download card JS files from the [latest release](https://github.com/turmacar/jackery-lovelace-cards/releases)
-2. Copy to `config/www/community/jackery/`
-3. Add the resources in **Settings → Dashboards → Resources**:
-   - URL: `/local/community/jackery/jackery-ts-plan-card.js` - Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-circuit-panel.js` - Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-schedule-heatmap.js` - Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-power-status-card.js` - Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-battery-pack-card.js` - Type: JavaScript Module
-   - URL: `/local/community/jackery/jackery-portable-card.js` - Type: JavaScript Module
+1. Download all `.js` files from the [repository](https://github.com/turmacar/jackery-lovelace-cards)
+2. Copy them to `config/www/community/jackery/`
+3. Add one resource in **Settings -> Dashboards -> Resources**:
+   - URL: `/local/community/jackery/jackery-lovelace-cards.js` - Type: JavaScript Module
+4. After updating the files, bump a `?v=N` query on that URL so browsers fetch the new version.
+
+Don't keep both installs: remove the manual resources before switching to HACS.
 
 ## Configuration
 

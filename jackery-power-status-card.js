@@ -488,7 +488,9 @@ class JackeryPowerStatusCard extends HTMLElement {
   }
 }
 
-customElements.define("jackery-power-status-card", JackeryPowerStatusCard);
+if (!customElements.get("jackery-power-status-card")) {
+  customElements.define("jackery-power-status-card", JackeryPowerStatusCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({

@@ -630,7 +630,9 @@ class JackeryScheduleHeatmapCard extends HTMLElement {
   }
 }
 
-customElements.define("jackery-schedule-heatmap", JackeryScheduleHeatmapCard);
+if (!customElements.get("jackery-schedule-heatmap")) {
+  customElements.define("jackery-schedule-heatmap", JackeryScheduleHeatmapCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
